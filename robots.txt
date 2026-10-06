@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://haohaibo.github.io/sitemap.xml
