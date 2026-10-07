@@ -3,7 +3,7 @@ layout: post
 title: Attention
 date: 2026-10-06 12:00:00
 description: Notes and research on attention.
-tags: [notes and research]
+tags: [notes and research, linear attention, LLM]
 toc:
   beginning: true
 ---
