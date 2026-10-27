@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="880" viewBox="0 0 1440 880">
+<defs><style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;fill:#172338}.title{font-size:36px;font-weight:700}.sub{font-size:21px;fill:#59677b}.heading{font-size:28px;font-weight:700}.body{font-size:21px}.num{font-size:22px;font-family:Arial,sans-serif;text-anchor:middle}.label{font-size:18px;fill:#68768a;text-anchor:middle}.small{font-size:18px;fill:#59677b}</style><marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 1L10 6L0 11Z" fill="#8a98ab"/></marker></defs>
+<rect width="1440" height="880" fill="#f4f7fb"/>
+<text class="title" x="40" y="65">图 2｜同一个向量，中心化与 RMS 缩放得到什么？</text>
+<text class="sub" x="40" y="108">为看清区别：忽略 ε，令 γ = 1、β = 0。以下图表展示归一化后的值。</text>
+<rect x="335" y="138" width="770" height="70" rx="16" fill="#e8eef7"/>
+<text class="heading" x="720" y="183" text-anchor="middle">输入 x = [1, 2, 3, 4]</text>
+<path d="M520 209V225H375V249 M920 209V225H1065V249" fill="none" stroke="#8a98ab" stroke-width="3" marker-end="url(#arrow)"/>
+<g transform="translate(32 260)">
+<rect width="676" height="450" rx="20" fill="#ffffff" stroke="#dce4ed"/>
+<text class="heading" x="28" y="45">LayerNorm：先减均值，再除标准差</text>
+<text class="body" x="28" y="86">µ = 2.5，σ = √1.25 ≈ 1.118</text>
+<text class="body" x="28" y="119">x − µ = [−1.5, −0.5, 0.5, 1.5]</text>
+<line x1="58" y1="278" x2="618" y2="278" stroke="#738399" stroke-width="2"/>
+<text class="label" x="37" y="284">0</text>
+<rect x="105" y="278" width="66" height="102" rx="4" fill="#eb9366"/><text class="num" x="138" y="408">−1.342</text>
+<rect x="239" y="278" width="66" height="34" rx="4" fill="#eb9366"/><text class="num" x="272" y="343">−0.447</text>
+<rect x="373" y="244" width="66" height="34" rx="4" fill="#568cea"/><text class="num" x="406" y="232">0.447</text>
+<rect x="507" y="176" width="66" height="102" rx="4" fill="#568cea"/><text class="num" x="540" y="164">1.342</text>
+<text class="label" x="138" y="436">特征 1</text><text class="label" x="272" y="436">特征 2</text><text class="label" x="406" y="436">特征 3</text><text class="label" x="540" y="436">特征 4</text>
+</g>
+<g transform="translate(732 260)">
+<rect width="676" height="450" rx="20" fill="#ffffff" stroke="#dce4ed"/>
+<text class="heading" x="28" y="45">RMSNorm：不减均值，直接除 RMS</text>
+<text class="body" x="28" y="86">RMS = √7.5 ≈ 2.739</text>
+<text class="body" x="28" y="119">输入的共同偏移没有被显式消除</text>
+<line x1="58" y1="278" x2="618" y2="278" stroke="#738399" stroke-width="2"/>
+<text class="label" x="37" y="284">0</text>
+<rect x="105" y="250" width="66" height="28" rx="4" fill="#39a791"/><text class="num" x="138" y="238">0.365</text>
+<rect x="239" y="222.5" width="66" height="55.5" rx="4" fill="#39a791"/><text class="num" x="272" y="210">0.730</text>
+<rect x="373" y="195" width="66" height="83" rx="4" fill="#39a791"/><text class="num" x="406" y="183">1.095</text>
+<rect x="507" y="167" width="66" height="111" rx="4" fill="#39a791"/><text class="num" x="540" y="155">1.461</text>
+<text class="label" x="138" y="436">特征 1</text><text class="label" x="272" y="436">特征 2</text><text class="label" x="406" y="436">特征 3</text><text class="label" x="540" y="436">特征 4</text>
+</g>
+<rect x="32" y="728" width="676" height="66" rx="14" fill="#e7efff"/>
+<text class="body" x="55" y="769">输出均值 = 0；方差 = 1；RMS = 1</text>
+<rect x="732" y="728" width="676" height="66" rx="14" fill="#e2f4ef"/>
+<text class="body" x="755" y="769">输出均值 ≈ 0.913；方差 ≈ 0.167；RMS = 1</text>
+<text class="body" x="40" y="834">两者的联系：RMS² = 方差 + 均值²。均值为 0 时，两者的归一化核心相同。</text>
+<text class="small" x="40" y="865">加入 ε 后单位尺度只是近似成立；加入可学习 γ、β 后，最终输出不必保持这些统计量。</text>
+</svg>
