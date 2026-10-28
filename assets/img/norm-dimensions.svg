@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="780" viewBox="0 0 1440 780">
+<defs>
+<style>text{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;fill:#172338}.title{font-size:36px;font-weight:700}.sub{font-size:21px;fill:#59677b}.cardtitle{font-size:29px;font-weight:700}.body{font-size:20px}.formula{font-size:21px;font-family:Arial,sans-serif}.cell{font-size:23px;text-anchor:middle;dominant-baseline:middle}.axis{font-size:17px;fill:#607087}.small{font-size:18px;fill:#59677b}</style>
+<g id="grid"><path d="M0 0H304V256H0Z M76 0V256 M152 0V256 M228 0V256 M0 64H304 M0 128H304 M0 192H304" fill="none" stroke="#ffffff" stroke-width="3"/>
+<text class="cell" x="38" y="32">1</text><text class="cell" x="114" y="32">2</text><text class="cell" x="190" y="32">3</text><text class="cell" x="266" y="32">4</text>
+<text class="cell" x="38" y="96">10</text><text class="cell" x="114" y="96">20</text><text class="cell" x="190" y="96">30</text><text class="cell" x="266" y="96">40</text>
+<text class="cell" x="38" y="160">2</text><text class="cell" x="114" y="160">4</text><text class="cell" x="190" y="160">6</text><text class="cell" x="266" y="160">8</text>
+<text class="cell" x="38" y="224">3</text><text class="cell" x="114" y="224">6</text><text class="cell" x="190" y="224">9</text><text class="cell" x="266" y="224">12</text>
+<text class="axis" x="38" y="-18" text-anchor="middle">d₁</text><text class="axis" x="114" y="-18" text-anchor="middle">d₂</text><text class="axis" x="190" y="-18" text-anchor="middle">d₃</text><text class="axis" x="266" y="-18" text-anchor="middle">d₄</text>
+<text class="axis" x="-21" y="37" text-anchor="middle">n₁</text><text class="axis" x="-21" y="101" text-anchor="middle">n₂</text><text class="axis" x="-21" y="165" text-anchor="middle">n₃</text><text class="axis" x="-21" y="229" text-anchor="middle">n₄</text></g>
+</defs>
+<rect width="1440" height="780" fill="#f4f7fb"/>
+<text class="title" x="40" y="66">图 1｜谁和谁一起计算统计量？</text>
+<text class="sub" x="40" y="108">二维示例 X：行 = 样本 N，列 = 特征 D。同色格子属于同一个统计集合。</text>
+<g transform="translate(32 146)">
+<rect width="448" height="474" rx="20" fill="#ffffff" stroke="#dce4ed"/>
+<text class="cardtitle" x="26" y="49">BatchNorm</text><text class="body" x="26" y="84">每一列独立，跨样本统计</text>
+<g transform="translate(76 142)"><rect width="76" height="256" fill="#d6e6ff"/><rect x="76" width="76" height="256" fill="#d6f3e5"/><rect x="152" width="76" height="256" fill="#ffecd0"/><rect x="228" width="76" height="256" fill="#eadfff"/><use href="#grid"/></g>
+<text class="formula" x="26" y="435">µ_d, σ²_d = stats over N</text>
+</g>
+<g transform="translate(496 146)">
+<rect width="448" height="474" rx="20" fill="#ffffff" stroke="#dce4ed"/>
+<text class="cardtitle" x="26" y="49">LayerNorm</text><text class="body" x="26" y="84">每一行独立，跨特征统计</text>
+<g transform="translate(76 142)"><rect width="304" height="64" fill="#d6e6ff"/><rect y="64" width="304" height="64" fill="#d6f3e5"/><rect y="128" width="304" height="64" fill="#ffecd0"/><rect y="192" width="304" height="64" fill="#eadfff"/><use href="#grid"/></g>
+<text class="formula" x="26" y="435">µ_n, σ²_n = stats over D</text>
+</g>
+<g transform="translate(960 146)">
+<rect width="448" height="474" rx="20" fill="#ffffff" stroke="#dce4ed"/>
+<text class="cardtitle" x="26" y="49">RMSNorm</text><text class="body" x="26" y="84">与 LN 同一维度，但不减均值</text>
+<g transform="translate(76 142)"><rect width="304" height="64" fill="#d6e6ff"/><rect y="64" width="304" height="64" fill="#d6f3e5"/><rect y="128" width="304" height="64" fill="#ffecd0"/><rect y="192" width="304" height="64" fill="#eadfff"/><use href="#grid"/></g>
+<text class="formula" x="26" y="435">r_n = √ mean_d(X_nd²)</text>
+</g>
+<rect x="32" y="650" width="1376" height="98" rx="16" fill="#e9eff8"/>
+<text class="body" x="54" y="686">Transformer 输入 [B, T, D]：常规 LN / RMSNorm 固定 (b, t)，只沿隐藏维度 D 统计。</text>
+<text class="small" x="54" y="722">CNN 输入 [N, C, H, W]：常规 BatchNorm 固定通道 c，沿 N、H、W 一起统计。</text>
+</svg>

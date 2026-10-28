@@ -1,0 +1,173 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> Normalization | Haibo Hao </title> <meta name="author" content="Haibo Hao"> <meta name="description" content="Notes and research on normalization - BatchNorm, LayerNorm and RMSNorm."> <meta name="keywords" content="jekyll, jekyll-theme, academic-website, portfolio-website"> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.css" integrity="sha256-zTN0r+0OKaIv2xqeNNIYxNk0pWJ6+IqPGc1iDgVzWF0=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="/assets/img/favicon.png?v=f330ad4d48379b9eace084125764b5cc"> <link rel="apple-touch-icon" href="/assets/img/favicon.png?v=f330ad4d48379b9eace084125764b5cc"> <link rel="stylesheet" href="/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://haohaibo.github.io/blog/2026/normalization/"> <script src="/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav "> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Haibo</span> Hao </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item active"> <a class="nav-link" href="/blog/">blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/cv/">CV </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link">ctrl k <i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top toc toc-sidebar" aria-label="Table of contents" data-toc-collapse="expanded" data-toc-collapse-depth=""></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">Normalization</h1> <p class="post-meta"> Created on October 27, 2026 </p> <p class="post-tags"> <a href="/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/blog/tag/notes-and-research"> <i class="fa-solid fa-hashtag fa-sm"></i> notes and research</a>   <a href="/blog/tag/normalization"> <i class="fa-solid fa-hashtag fa-sm"></i> normalization</a>   <a href="/blog/tag/llm"> <i class="fa-solid fa-hashtag fa-sm"></i> LLM</a> </p> </header> <article class="post-content"> <div id="markdown-content"> <p>本文主要讲解 BatchNorm、LayerNorm 和 RMSNorm 的区别与联系。</p> <p>三者的区别主要体现在统计量的计算维度和归一化方式上：</p> <ol> <li> <strong>和哪些数一起计算统计量？</strong>——决定了 BatchNorm 和 LayerNorm 的区别。</li> <li> <strong>如何调整这些数？</strong>——决定了 LayerNorm 和 RMSNorm 的区别。</li> </ol> <blockquote> <p><strong>BatchNorm：同一个特征，跨样本做标准化。</strong></p> <p><strong>LayerNorm：同一个样本，跨特征做标准化。</strong></p> <p><strong>RMSNorm：通常沿 LayerNorm 相同的维度，但不减均值，只控制整体尺度。</strong></p> </blockquote> <h2 id="一为什么需要-norm">一、为什么需要 Norm？</h2> <h3 id="1-深层网络中的数值尺度容易发生变化">1. 深层网络中的数值尺度容易发生变化</h3> <p>神经网络会反复执行这样的计算：</p> <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>输入 → 线性变换 → 激活函数 → 线性变换 → …… → 输出
+</code></pre></div></div> <p>每次线性变换、非线性操作和残差相加，都可能改变隐藏表示的数值尺度。</p> <p>例如，两个隐藏向量：</p> \[\begin{aligned} \mathbf{x}^{(1)} &amp;= [0.1,\ 0.2,\ 0.3,\ 0.4], \\ \mathbf{x}^{(2)} &amp;= [10,\ 20,\ 30,\ 40]. \end{aligned}\] <p>它们的方向相同，但整体尺度相差 100 倍。把它们送入后续网络，可能产生很不一样的激活、注意力分数和梯度。</p> <p><strong>Norm 的基本作用，是先把隐藏表示调整到一个较可控的尺度，再交给后续计算。</strong></p> <p>注意：这里主要是在调整<strong>激活值，也就是中间表示</strong>，不是直接归一化权重。</p> <h3 id="2-它能帮助优化更稳定">2. 它能帮助优化更稳定</h3> <p>通常包括：</p> <ul> <li>减少隐藏表示尺度波动对后续计算的影响。</li> <li>改善训练过程中的数值和优化稳定性。</li> <li>在一些架构中允许使用更大的学习率。</li> <li>降低模型对部分参数尺度的敏感性。</li> </ul> <p>但不能理解成：</p> <blockquote> <p>“加上 Norm，就不会梯度爆炸或消失。”</p> </blockquote> <p>Norm 只是稳定训练的一部分，初始化、残差连接、学习率等仍然重要。</p> <h3 id="3-不只是让数据服从正态分布">3. 不只是“让数据服从正态分布”</h3> <p>这是一个常见误解：<strong>归一化不等于高斯化。</strong></p> <p>减均值、除标准差，只是在调整均值和方差，并不会把任意分布变成正态分布，也不意味着输出一定在 \([-1,1]\) 内。</p> <p>另外，BatchNorm 最初常用“减少内部协变量偏移”解释其作用；但后续研究表明，不能把它的有效性简单归结为这一点，优化性质的改善同样重要。</p> <h2 id="二先看图它们沿哪个维度计算">二、先看图：它们沿哪个维度计算？</h2> <p>假设输入是一张二维矩阵：</p> \[X \in \mathbb{R}^{N\times D}.\] <ul> <li>\(N\)：样本数，也就是 batch size。</li> <li>\(D\)：每个样本的特征数。</li> </ul> <p>那么：</p> <ul> <li><strong>BatchNorm：每列独立，跨行统计。</strong></li> <li><strong>LayerNorm：每行独立，跨列统计。</strong></li> <li><strong>RMSNorm：通常也每行独立，跨列统计。</strong></li> </ul> <p>图中同色格子一起计算统计量：</p> <figure> <picture> <source class="responsive-img-srcset" srcset="/assets/img/norm-dimensions.svg" sizes="95vw"></source> <img src="/assets/img/norm-dimensions.svg" class="img-fluid" width="100%" height="auto" alt="BatchNorm、LayerNorm、RMSNorm 的统计维度" loading="lazy" onerror="this.onerror=null; document.querySelectorAll('.responsive-img-srcset').forEach(function (n) { n.remove(); });"> </picture> <figcaption class="caption">BatchNorm、LayerNorm、RMSNorm 的统计维度</figcaption> </figure> <p>这里必须区分两件事：</p> <blockquote> <p><strong>统计量的计算维度</strong>，和<strong>可学习参数的维度</strong>，不是一回事。</p> </blockquote> <p>例如，二维输入中的 LN：</p> <ul> <li>每个样本有自己的均值、方差。</li> <li>但可学习的 \(\gamma\)、\(\beta\) 通常按特征设置，在样本之间共享。</li> </ul> <h2 id="三batchnorm跨样本标准化同一个特征">三、BatchNorm：跨样本，标准化同一个特征</h2> <h3 id="1-计算公式">1. 计算公式</h3> <p>输入矩阵 \(X\in\mathbb{R}^{N\times D}\)，\(x_{n,d}\) 表示第 \(n\) 个样本的第 \(d\) 个特征。</p> <p>对每个特征 \(d\)，计算：</p> \[\begin{aligned} \mu_d &amp;= \frac{1}{N}\sum_{n=1}^{N}x_{n,d}, \\ \sigma_d^2 &amp;= \frac{1}{N}\sum_{n=1}^{N}(x_{n,d}-\mu_d)^2, \\ z_{n,d} &amp;= \frac{x_{n,d}-\mu_d}{\sqrt{\sigma_d^2+\varepsilon}}, \\ y_{n,d} &amp;= \gamma_d z_{n,d}+\beta_d. \end{aligned}\] <p>含义：</p> <ul> <li>\(\mu_d\)：这个特征在当前 batch 中的均值。</li> <li>\(\sigma_d^2\)：这个特征在当前 batch 中的方差。</li> <li>\(\varepsilon\)：防止分母为零、改善数值稳定性的小常数。</li> <li>\(\gamma_d\)、\(\beta_d\)：可学习的缩放和平移参数。</li> </ul> <p><strong>注意，\(\varepsilon\) 加在平方根里面。</strong></p> <p>这里归一化公式使用的是除以 \(N\) 的方差，而不是统计学中用于无偏估计的 \(N-1\)。</p> <h3 id="2-cnn-中的-batchnorm">2. CNN 中的 BatchNorm</h3> <p>卷积输入通常是：</p> \[X\in\mathbb{R}^{N\times C\times H\times W}.\] <p>常规 BatchNorm 会：</p> <blockquote> <p><strong>固定通道 \(c\)，沿 \(N\)、\(H\)、\(W\) 一起计算均值和方差。</strong></p> </blockquote> <p>也就是，每个通道有一组统计量和一组 \(\gamma\)、\(\beta\)。</p> <p>所以，“BatchNorm 只沿 batch 维计算”只是二维输入下的简化说法；在 CNN 中，它还会合并空间位置。</p> <h3 id="3-训练与推理不同">3. 训练与推理不同</h3> <p>这是 BatchNorm 最重要的特点之一。</p> <h4 id="训练时">训练时</h4> <p>使用<strong>当前 batch 的均值和方差</strong>进行归一化，同时更新运行统计量：</p> \[\begin{aligned} \mu_{\mathrm{running}} &amp;\leftarrow (1-\alpha)\mu_{\mathrm{running}} \\ &amp;\quad +\alpha\mu_{\mathrm{batch}}. \end{aligned}\] <p>运行方差也会更新，具体更新约定可能因框架而不同。</p> <h4 id="推理时">推理时</h4> <p>通常使用训练过程中积累的：</p> <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>running_mean
+running_var
+</code></pre></div></div> <p>而不是临时用当前推理 batch 计算统计量。</p> <p>否则，同一个样本的输出可能随“和哪些样本一起推理”而变化。</p> <h3 id="4-优点与局限">4. 优点与局限</h3> <p><strong>优点：</strong></p> <ul> <li>在许多 CNN 中效果很好。</li> <li>batch 统计量的随机波动可能带来一定正则化作用。</li> </ul> <p><strong>局限：</strong></p> <ul> <li>训练时，一个样本的输出依赖同一统计集合中的其他样本。</li> <li>统计集合较小时，估计容易不稳定。</li> <li>训练和推理的统计行为不一致。</li> <li>分布式训练中，是否跨设备同步统计量会影响行为。</li> </ul> <p>两个容易忽视的细节：</p> <ul> <li> <strong>batch size 为 1，不一定意味着卷积 BN 无法使用</strong>，因为还可能有 \(H\times W\) 个空间位置参与统计。</li> <li> <strong>梯度累积不自动等价于大 batch 的 BN</strong>，因为 BN 通常在每次前向计算时分别统计。</li> </ul> <h2 id="四layernorm每个样本内部做标准化">四、LayerNorm：每个样本内部做标准化</h2> <h3 id="1-计算公式-1">1. 计算公式</h3> <p>对单个样本的特征向量：</p> \[\mathbf{x}=[x_1,x_2,\ldots,x_D].\] <p>计算：</p> \[\begin{aligned} \mu &amp;= \frac{1}{D}\sum_{i=1}^{D}x_i, \\ \sigma^2 &amp;= \frac{1}{D}\sum_{i=1}^{D}(x_i-\mu)^2, \\ z_i &amp;= \frac{x_i-\mu}{\sqrt{\sigma^2+\varepsilon}}, \\ y_i &amp;= \gamma_i z_i+\beta_i. \end{aligned}\] <p>与 BatchNorm 相比，操作形式非常接近，主要变化是：</p> <blockquote> <p><strong>均值和方差不再跨样本计算，而是在当前样本的特征内部计算。</strong></p> </blockquote> <p>忽略 \(\varepsilon\)，且方差非零时，归一化核心 \(\mathbf{z}\) 满足：</p> \[\begin{aligned} \operatorname{mean}(\mathbf{z}) &amp;= 0, \\ \operatorname{Var}(\mathbf{z}) &amp;= 1. \end{aligned}\] <p>加入 \(\varepsilon\) 后，方差只是接近 1。</p> <h3 id="2-transformer-中的-layernorm">2. Transformer 中的 LayerNorm</h3> <p>Transformer 的隐藏表示通常是：</p> \[X\in\mathbb{R}^{B\times T\times D}.\] <ul> <li>\(B\)：batch size。</li> <li>\(T\)：序列长度。</li> <li>\(D\)：隐藏维度。</li> </ul> <p>常规 LayerNorm 固定 \((b,t)\)，只沿 \(D\) 计算：</p> <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>第 b 个样本：
+
+token 1 → [D 个特征] → 单独计算 μ、σ²
+token 2 → [D 个特征] → 单独计算 μ、σ²
+token 3 → [D 个特征] → 单独计算 μ、σ²
+</code></pre></div></div> <p>因此：</p> <ul> <li>不把不同样本混在一起。</li> <li>不把不同 token 混在一起。</li> <li>每个 token 都有自己的均值和方差。</li> <li>\(\gamma\)、\(\beta\) 通常在所有样本、所有 token 之间共享。</li> </ul> <p><strong>LayerNorm 这个名字，不代表它必然把“整层所有元素”一起归一化。</strong> 实际归一化哪些维度，要看配置；Transformer 中通常是最后的隐藏维度。</p> <h3 id="3-训练与推理">3. 训练与推理</h3> <p>LN 在训练和推理时，通常都使用<strong>当前输入自身的统计量</strong>。</p> <p>没有 BatchNorm 那样的运行均值、运行方差。</p> <p>因此，它很适合 batch 大小变化、变长序列等场景。</p> <h2 id="五rmsnorm不减均值只调整均方根">五、RMSNorm：不减均值，只调整均方根</h2> <p>RMS 是 <strong>Root Mean Square，均方根</strong>。</p> <h3 id="1-计算公式-2">1. 计算公式</h3> <p>对一个 \(D\) 维向量：</p> \[\begin{aligned} \operatorname{RMS}(\mathbf{x}) &amp;=\sqrt{\frac{1}{D}\sum_{i=1}^{D}x_i^2}, \\ z_i&amp;=\frac{x_i}{\sqrt{\frac{1}{D}\sum_{j=1}^{D}x_j^2+\varepsilon}}, \\ y_i&amp;=\gamma_i z_i. \end{aligned}\] <p>标准 RMSNorm 通常只有可学习缩放 \(\gamma\)，没有 \(\beta\)；某些实现可能加入额外偏置。</p> <p>和 LN 相比：</p> <ul> <li>不计算用于中心化的均值。</li> <li>不执行 \(x_i-\mu\)。</li> <li>分母使用<strong>平方的平均值</strong>，而不是<strong>减均值后的平方偏差平均值</strong>。</li> </ul> <p>所以它不是简单地：</p> <blockquote> <p>“把 LN 分子中的减均值删掉，其他保持不变。”</p> </blockquote> <p><strong>分母也变了。</strong></p> <h3 id="2-它保证什么">2. 它保证什么？</h3> <p>忽略 \(\varepsilon\)，对于非零向量：</p> \[\frac{1}{D}\sum_{i=1}^{D}z_i^2=1 \quad\Longleftrightarrow\quad \operatorname{RMS}(\mathbf{z})=1.\] <p>但它<strong>不保证</strong>：</p> \[\begin{aligned} \operatorname{mean}(\mathbf{z}) &amp;= 0, \\ \operatorname{Var}(\mathbf{z}) &amp;= 1. \end{aligned}\] <p>这就是 RMSNorm 与 LayerNorm 最核心的区别。</p> <h3 id="3-与-l2-归一化的关系">3. 与 L2 归一化的关系</h3> \[\begin{aligned} \lVert\mathbf{x}\rVert_2&amp;=\sqrt{\sum_{i=1}^{D}x_i^2}, \\ \operatorname{RMS}(\mathbf{x})&amp;=\frac{\lVert\mathbf{x}\rVert_2}{\sqrt{D}}. \end{aligned}\] <p>因此，忽略 \(\varepsilon\) 和可学习参数：</p> \[\mathbf{z}=\sqrt{D}\,\frac{\mathbf{x}}{\lVert\mathbf{x}\rVert_2}.\] <p>普通 L2 归一化把向量长度调整到 1；RMSNorm 把向量长度调整到 \(\sqrt{D}\)，使每个坐标的均方尺度为 1。</p> <h2 id="六同一组数字具体算一次">六、同一组数字，具体算一次</h2> <p>取：</p> \[\mathbf{x}=[1,2,3,4].\] <p>暂时忽略 \(\varepsilon\)，并设 \(\gamma=1\)、\(\beta=0\)。</p> <h3 id="1-layernorm">1. LayerNorm</h3> \[\begin{aligned} \mu&amp;=2.5, \\ \sigma^2&amp;=\frac{(-1.5)^2+(-0.5)^2+0.5^2+1.5^2}{4} \\ &amp;=1.25, \\ \sigma&amp;\approx1.118. \end{aligned}\] <p>所以：</p> \[\operatorname{LN}(\mathbf{x}) \approx[-1.342,-0.447,0.447,1.342].\] <p>结果围绕 0 分布。</p> <h3 id="2-rmsnorm">2. RMSNorm</h3> \[\begin{aligned} \operatorname{RMS}(\mathbf{x})^2 &amp;=\frac{1^2+2^2+3^2+4^2}{4} \\ &amp;=7.5, \\ \operatorname{RMS}(\mathbf{x})&amp;\approx2.739. \end{aligned}\] <p>所以：</p> \[\operatorname{RMSNorm}(\mathbf{x}) \approx[0.365,0.730,1.095,1.461].\] <p>原来全部为正，归一化核心仍然全部为正：</p> <figure> <picture> <source class="responsive-img-srcset" srcset="/assets/img/layernorm-vs-rmsnorm.svg" sizes="95vw"></source> <img src="/assets/img/layernorm-vs-rmsnorm.svg" class="img-fluid" width="100%" height="auto" alt="LayerNorm 与 RMSNorm 的数值对比" loading="lazy" onerror="this.onerror=null; document.querySelectorAll('.responsive-img-srcset').forEach(function (n) { n.remove(); });"> </picture> <figcaption class="caption">LayerNorm 与 RMSNorm 的数值对比</figcaption> </figure> <h3 id="3-batchnorm-要看一批样本">3. BatchNorm 要看一批样本</h3> <p>现在取两个样本：</p> \[X=\begin{bmatrix} 1&amp;2&amp;3&amp;4 \\ 10&amp;20&amp;30&amp;40 \end{bmatrix}.\] <p>每列分别计算：</p> \[\begin{aligned} \boldsymbol{\mu}&amp;=[5.5,11,16.5,22], \\ \boldsymbol{\sigma}&amp;=[4.5,9,13.5,18]. \end{aligned}\] <p>于是：</p> \[\operatorname{BN}(X)=\begin{bmatrix} -1&amp;-1&amp;-1&amp;-1 \\ 1&amp;1&amp;1&amp;1 \end{bmatrix}.\] <p>对比同一个矩阵：</p> <table> <thead> <tr> <th>方法</th> <th>第一个样本的输出</th> <th>第二个样本的输出</th> </tr> </thead> <tbody> <tr> <td>BN</td> <td>\([-1,-1,-1,-1]\)</td> <td>\([1,1,1,1]\)</td> </tr> <tr> <td>LN</td> <td>\([-1.342,-0.447,0.447,1.342]\)</td> <td>与第一个样本相同</td> </tr> <tr> <td>RMSNorm</td> <td>\([0.365,0.730,1.095,1.461]\)</td> <td>与第一个样本相同</td> </tr> </tbody> </table> <p>为什么 LN、RMSNorm 两行相同？</p> <p>因为第二个向量只是第一个向量乘以正数 10，而这两种归一化的核心都会消除这种整体缩放。</p> <h2 id="七layernorm-与-rmsnorm-到底是什么关系">七、LayerNorm 与 RMSNorm 到底是什么关系？</h2> <h3 id="1-一个关键恒等式">1. 一个关键恒等式</h3> <p>先明确 \(\operatorname{RMS}(\mathbf{x})^2\) 是什么。按 Root Mean Square 的计算顺序，先平方、再平均、最后开根号；平方之后根号被抵消，剩下的就是<strong>平方的平均值</strong>：</p> \[\operatorname{RMS}(\mathbf{x})^2=\frac{1}{D}\sum_{i=1}^{D}x_i^2.\] <p>它和方差的差别只在参照点：</p> <table> <thead> <tr> <th>量</th> <th>计算方式</th> <th>衡量什么</th> </tr> </thead> <tbody> <tr> <td>\(\operatorname{RMS}(\mathbf{x})^2\)</td> <td>直接平方，再平均</td> <td>各坐标距离 \(0\) 的平方平均</td> </tr> <tr> <td>\(\sigma^2\)</td> <td>减均值后平方，再平均</td> <td>各坐标距离 \(\mu\) 的平方平均</td> </tr> </tbody> </table> <p>恒等式说的就是，这两个量只相差一个 \(\mu^2\)：</p> \[\operatorname{RMS}(\mathbf{x})^2=\sigma^2+\mu^2,\] <p>写开即</p> \[\frac{1}{D}\sum_{i=1}^{D}x_i^2 =\frac{1}{D}\sum_{i=1}^{D}(x_i-\mu)^2+\mu^2.\] <h4 id="推导">推导</h4> <p>使用除以 \(D\) 的方差定义，从右边展开：</p> \[\begin{aligned} \sigma^2+\mu^2 &amp;=\frac{1}{D}\sum_{i=1}^{D}(x_i-\mu)^2+\mu^2 \\ &amp;=\frac{1}{D}\sum_{i=1}^{D}\bigl(x_i^2-2\mu x_i+\mu^2\bigr)+\mu^2 \\ &amp;=\frac{1}{D}\sum_{i=1}^{D}x_i^2 -\frac{2\mu}{D}\sum_{i=1}^{D}x_i +\frac{1}{D}\sum_{i=1}^{D}\mu^2 +\mu^2 \\ &amp;=\frac{1}{D}\sum_{i=1}^{D}x_i^2-2\mu^2+\mu^2+\mu^2 \\ &amp;=\frac{1}{D}\sum_{i=1}^{D}x_i^2 =\operatorname{RMS}(\mathbf{x})^2. \end{aligned}\] <p>整个推导只有两处用到“\(\mu\) 是均值”这一定义。</p> <p>第一处，交叉项里的求和就是均值：</p> \[\frac{1}{D}\sum_{i=1}^{D}x_i=\mu \quad\Longrightarrow\quad \frac{2\mu}{D}\sum_{i=1}^{D}x_i=2\mu\cdot\mu=2\mu^2.\] <p>第二处，\(\mu^2\) 与 \(i\) 无关，求和后 \(D\) 被约掉：</p> \[\sum_{i=1}^{D}\mu^2=D\mu^2 \quad\Longrightarrow\quad \frac{1}{D}\sum_{i=1}^{D}\mu^2=\mu^2.\] <p>于是三个 \(\mu^2\) 项恰好相消：</p> \[-2\mu^2+\mu^2+\mu^2=0.\] <p><strong>这个相消就是恒等式的全部内容。</strong> 如果把 \(\mu\) 换成任意常数 \(c\)，交叉项变成 \(2c\cdot\operatorname{mean}(\mathbf{x})\)，与其余项无法抵消——这也说明为什么参照点必须取均值。</p> <h4 id="数值验证">数值验证</h4> <p>对 \(\mathbf{x}=[1,2,3,4]\)：</p> \[\begin{aligned} \operatorname{RMS}(\mathbf{x})^2&amp;=\frac{1+4+9+16}{4}=7.5, \\ \sigma^2&amp;=1.25, \\ \mu^2&amp;=2.5^2=6.25, \\ 7.5&amp;=1.25+6.25. \end{aligned}\] <p>这个分解可以这样读：</p> <ul> <li>\(\operatorname{RMS}(\mathbf{x})^2\)：相对 \(0\) 的整体平方尺度。</li> <li>\(\sigma^2\)：围绕均值的波动。</li> <li>\(\mu^2\)：均值本身的偏移。</li> </ul> <p>所以一个向量数值偏大，可能有两种原因：坐标之间差异大，即 \(\sigma^2\) 大；或者坐标整体远离 \(0\)，即 \(\lvert\mu\rvert\) 大。RMS 把两者一起算进去。</p> <p>例如 \(\mathbf{x}=[5,5,5,5]\) 完全没有波动，但并不接近 \(0\)：</p> \[\sigma^2=0,\qquad \operatorname{RMS}(\mathbf{x})^2=25=0+5^2.\] <p><strong>所以“没有波动”不等于“整体尺度小”。</strong></p> <h4 id="换成矩的语言">换成矩的语言</h4> <p>这条恒等式就是概率论里的经典结果：</p> \[\operatorname{Var}(X)=\mathbb{E}[X^2]-\bigl(\mathbb{E}[X]\bigr)^2 \quad\Longleftrightarrow\quad \mathbb{E}[X^2]=\operatorname{Var}(X)+\bigl(\mathbb{E}[X]\bigr)^2.\] <ul> <li>\(\operatorname{RMS}^2\) 是<strong>二阶原点矩</strong>，以 \(0\) 为参照。</li> <li>\(\sigma^2\) 是<strong>二阶中心矩</strong>，以 \(\mu\) 为参照。</li> </ul> <p>两者相差的 \(\mu^2\) 正是参照点平移的代价。LayerNorm 用中心矩，RMSNorm 用原点矩，区别恰好落在这一项上。</p> <p>因此，它们的核心可以写成：</p> \[\begin{aligned} z_i^{\mathrm{LN}}&amp;=\frac{x_i-\mu}{\sqrt{\sigma^2+\varepsilon}}, \\ z_i^{\mathrm{RMS}}&amp;=\frac{x_i}{\sqrt{\sigma^2+\mu^2+\varepsilon}}. \end{aligned}\] <p>区别清楚地落在两个地方：</p> <table> <thead> <tr> <th> </th> <th>LayerNorm</th> <th>RMSNorm</th> </tr> </thead> <tbody> <tr> <td>分子</td> <td>去掉共同均值</td> <td>保留原坐标</td> </tr> <tr> <td>分母</td> <td>围绕均值的波动尺度</td> <td>相对于 0 的整体尺度</td> </tr> </tbody> </table> <p><strong>如果输入均值为 0，它们的归一化核心相同。</strong> 完整模块还是否相同，则取决于 \(\gamma\)、\(\beta\) 等参数设置。</p> <h3 id="2-ln-消除共同平移rmsnorm-通常不消除">2. LN 消除共同平移，RMSNorm 通常不消除</h3> <p>例如，\(\mathbf{1}\) 表示全 1 向量：</p> \[\begin{aligned} \mathbf{x}&amp;=[1,2,3,4], \\ \mathbf{x}+10\mathbf{1}&amp;=[11,12,13,14]. \end{aligned}\] <p>对 LN：</p> \[\operatorname{LN}(\mathbf{x}+10\mathbf{1}) =\operatorname{LN}(\mathbf{x}).\] <p>因为均值也增加了 10，减均值后完全抵消。</p> <p>对 RMSNorm：</p> \[\operatorname{RMSNorm}(\mathbf{x}+10\mathbf{1}) \ne\operatorname{RMSNorm}(\mathbf{x}).\] <p>所以，忽略 \(\varepsilon\) 时：</p> <ul> <li> <strong>LN</strong>：对正的整体缩放、共同平移都不敏感。</li> <li> <strong>RMSNorm</strong>：对正的整体缩放不敏感，但通常对共同平移敏感。</li> </ul> <p>这里的“共同平移”指所有特征加上同一个数，不是每个特征随意加不同的数。</p> <h3 id="3-一个极端例子">3. 一个极端例子</h3> <p>取：</p> \[\mathbf{x}=[5,5,5,5].\] <p>LN 因为减掉均值，归一化核心是：</p> \[\mathbf{z}^{\mathrm{LN}}=[0,0,0,0].\] <p>RMSNorm 忽略 \(\varepsilon\) 后得到：</p> \[\mathbf{z}^{\mathrm{RMS}}=[1,1,1,1].\] <p>这说明：</p> <blockquote> <p>LN 会移除“所有特征共同抬高”的分量；RMSNorm 不会显式移除这个分量。</p> </blockquote> <h3 id="4-几何上怎么理解">4. 几何上怎么理解？</h3> <p>暂不考虑 \(\varepsilon\) 和可学习参数：</p> <p><strong>LayerNorm：</strong> 原向量 → 减均值，投影到“坐标之和为 0”的平面 → 把非零向量长度调整为 \(\sqrt{D}\)。</p> <p><strong>RMSNorm：</strong> 原向量 → 保持原方向 → 把长度调整为 \(\sqrt{D}\)。</p> <p>因此，<strong>RMSNorm 的核心保留原向量方向，LN 通常会改变原向量方向。</strong></p> <p>加入逐特征 \(\gamma\) 后，完整 RMSNorm 模块也可能改变方向。</p> <h2 id="八为什么还需要可学习的-γβ">八、为什么还需要可学习的 γ、β？</h2> <p>归一化核心是在设置一个统一的统计尺度，但网络可能需要不同特征具有不同的幅度和偏移。</p> <p>所以 BN、LN 通常接：</p> \[y_i=\gamma_i z_i+\beta_i.\] <p>常见初始化是：</p> \[\begin{aligned} \gamma_i&amp;=1, \\ \beta_i&amp;=0. \end{aligned}\] <p>随后网络自己学习合适的缩放和平移。</p> <p>这也解释了一个重要细节：</p> <blockquote> <p><strong>“均值为 0、方差为 1”描述的是归一化核心，不一定是最终输出。</strong></p> </blockquote> <p>\(\gamma\)、\(\beta\) 之后，最终输出不必保持这些统计量。</p> <p>同时，\(\gamma\)、\(\beta\) 并不能普遍恢复 LN 已经移除的、每个样本各不相同的原始均值；它们主要提供可学习的表达自由度。</p> <h2 id="九放在一起比较">九、放在一起比较</h2> <table> <thead> <tr> <th>比较项</th> <th>BatchNorm</th> <th>LayerNorm</th> <th>RMSNorm</th> </tr> </thead> <tbody> <tr> <td>典型统计集合</td> <td>同一特征，跨样本；CNN 还跨空间</td> <td>同一样本或 token，跨特征</td> <td>通常与 LN 相同</td> </tr> <tr> <td>减均值</td> <td>是</td> <td>是</td> <td>否</td> </tr> <tr> <td>分母</td> <td>标准差</td> <td>标准差</td> <td>均方根</td> </tr> <tr> <td>归一化核心的目标</td> <td>均值 0、方差约 1</td> <td>均值 0、方差约 1</td> <td>RMS 约 1</td> </tr> <tr> <td>训练时依赖其他样本</td> <td>是</td> <td>否</td> <td>否</td> </tr> <tr> <td>通常需要运行统计量</td> <td>是</td> <td>否</td> <td>否</td> </tr> <tr> <td>Norm 本身训练/推理算法</td> <td>通常不同</td> <td>通常相同</td> <td>通常相同</td> </tr> <tr> <td>标准可学习参数</td> <td>\(\gamma\)、\(\beta\)</td> <td>\(\gamma\)、\(\beta\)</td> <td>\(\gamma\)</td> </tr> <tr> <td>常见场景</td> <td>CNN</td> <td>Transformer、RNN 等</td> <td>许多现代大语言模型</td> </tr> </tbody> </table> <p>如果对应的特征或通道数是 \(D\)，标准仿射参数量通常分别为：</p> \[\begin{aligned} \operatorname{Params}(\mathrm{BN})&amp;=2D, \\ \operatorname{Params}(\mathrm{LN})&amp;=2D, \\ \operatorname{Params}(\mathrm{RMSNorm})&amp;=D. \end{aligned}\] <p>不过，这些参数量相对于大模型的线性层通常很小。RMSNorm 的主要价值不是省下几个参数，而是：</p> <blockquote> <p><strong>用更简单的尺度控制，在许多模型中取得良好的效果，并减少中心化相关的计算。</strong></p> </blockquote> <p>它通常计算更简单，但实际速度取决于融合算子、内存带宽、硬件和实现，不能直接把 Norm 的提速等同于整个模型的提速。</p> <h2 id="十为什么-transformer-常用-ln--rmsnorm">十、为什么 Transformer 常用 LN / RMSNorm？</h2> <h3 id="1-每个-token-可以独立归一化">1. 每个 token 可以独立归一化</h3> <p>Transformer 处理的是形状为 \(B\times T\times D\) 的张量。</p> <p>沿 \(D\) 做 LN 或 RMSNorm：</p> <ul> <li>不依赖其他样本。</li> <li>不需要合并不同 token 的统计量。</li> <li>训练与推理的归一化规则一致。</li> <li>很自然地适用于自回归生成。</li> </ul> <p>BatchNorm 并不是绝对不能用于序列模型，但如果把时间位置一起统计，就需要处理 padding、变长序列以及因果信息泄漏等问题，通常不如逐 token 的 LN/RMSNorm 自然。</p> <h3 id="2-norm-的种类和位置是两件事">2. Norm 的“种类”和“位置”是两件事</h3> <p>Transformer 中还会讨论 <strong>Pre-Norm</strong> 和 <strong>Post-Norm</strong>。</p> <p>设 \(F\) 是 Attention 或 FFN 子层：</p> <h4 id="pre-norm先归一化再进入子层">Pre-Norm：先归一化，再进入子层</h4> \[\mathbf{h}'=\mathbf{h}+F\bigl(\operatorname{Norm}(\mathbf{h})\bigr).\] <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>h ────────────────────┐
+                      + → h'
+h → Norm → Attention ─┘
+</code></pre></div></div> <p>残差主路径保留了直接通路，通常有利于深层模型训练稳定。</p> <h4 id="post-norm残差相加后再归一化">Post-Norm：残差相加后再归一化</h4> \[\mathbf{h}'=\operatorname{Norm}\bigl(\mathbf{h}+F(\mathbf{h})\bigr).\] <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>h ────────────┐
+              + → Norm → h'
+h → Attention ┘
+</code></pre></div></div> <p>因此：</p> <ul> <li> <strong>LN / RMSNorm</strong>：回答“如何归一化”。</li> <li> <strong>Pre-Norm / Post-Norm</strong>：回答“放在哪里”。</li> </ul> <p>不要把它们混为一谈。</p> <h3 id="3-为什么很多大模型选择-rmsnorm">3. 为什么很多大模型选择 RMSNorm？</h3> <p>在许多大语言模型中，控制隐藏表示的整体尺度已经很有价值，显式去除均值未必是必需的。</p> <p>RMSNorm 因而提供了一种更简单的选择：</p> <ul> <li>保留尺度归一化。</li> <li>省去中心化操作。</li> <li>在许多现代架构中有良好的训练效果。</li> </ul> <p>但这不意味着 RMSNorm 在所有任务中都优于 LN；它们移除的信息不同，效果仍然依赖架构和任务。</p> <p><strong>最后记住：BN 和 LN 主要差在统计维度；LN 和 RMSNorm 主要差在是否中心化，以及分母用标准差还是均方根。Norm 控制的是表示的统计尺度，不是把数值变成概率，也不是把分布变成正态分布。</strong></p> </div> </article> <br> <hr> <br> <h2 class="text-3xl font-semibold mb-4 mt-12">Enjoy Reading This Article?</h2> <p class="mb-2">Here are some more articles you might like to read next:</p> <ul class="list-disc pl-7 my-3 space-y-2 marker:text-[var(--global-theme-color)]"> <li class="leading-relaxed"> <a class="underline decoration-1 hover:text-[var(--global-hover-color)]" href="https://blog.google/technology/ai/google-gemini-update-flash-ai-assistant-io-2024/" target="_blank" rel="noopener noreferrer">Google Gemini updates: Flash 1.5, Gemma 2 and Project Astra</a> <svg width="1rem" height="1rem" viewbox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"> <path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#999" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path> </svg> </li> <li class="leading-relaxed"> <a class="underline decoration-1 hover:text-[var(--global-hover-color)]" href="/blog/2026/attention/">Attention</a> </li> </ul> </div> </div> </div> </div> <footer class="fixed-bottom" role="contentinfo"> <div class="container mt-0"> © Copyright 2026 Haibo Hao. Powered by <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank" rel="external nofollow noopener">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank" rel="external nofollow noopener">Unsplash</a>. </div> </footer> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/al_math/js/mathjax-setup.js"></script> <script src="/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script defer src="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.min.js" integrity="sha256-lo/r+jQ81wWrxdIiiiEEd538z4+dTJTt+leOuAS7GCw=" crossorigin="anonymous"></script> <script src="/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script> <script async src="https://badge.dimensions.ai/badge.js"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/al_img_tools/js/zoom.js"></script> <script defer src="/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-about",
+    title: "about",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/";
+    },
+  },{id: "nav-blog",
+          title: "blog",
+          description: "",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/blog/";
+          },
+        },{id: "nav-projects",
+          title: "projects",
+          description: "To be updated.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/projects/";
+          },
+        },{id: "nav-cv",
+          title: "CV",
+          description: "To be updated.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/cv/";
+          },
+        },{id: "post-normalization",
+        
+          title: "Normalization",
+        
+        description: "Notes and research on normalization - BatchNorm, LayerNorm and RMSNorm.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/normalization/";
+          
+        },
+      },{id: "post-attention",
+        
+          title: "Attention",
+        
+        description: "Notes and research on attention.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/attention/";
+          
+        },
+      },{id: "post-google-gemini-updates-flash-1-5-gemma-2-and-project-astra",
+        
+          title: 'Google Gemini updates: Flash 1.5, Gemma 2 and Project Astra <svg width="1.2rem" height="1.2rem" top=".5rem" viewbox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#999" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+        
+        description: "We’re sharing updates across our Gemini family of models and a glimpse of Project Astra, our vision for the future of AI assistants.",
+        section: "Posts",
+        handler: () => {
+          
+            window.open("https://blog.google/technology/ai/google-gemini-update-flash-ai-assistant-io-2024/", "_blank");
+          
+        },
+      },{id: "books-the-godfather",
+          title: 'The Godfather',
+          description: "",
+          section: "Books",handler: () => {
+              window.location.href = "/books/the_godfather/";
+            },},{id: "news-a-simple-inline-announcement",
+          title: 'A simple inline announcement.',
+          description: "",
+          section: "News",},{id: "news-a-long-announcement-with-details",
+          title: 'A long announcement with details',
+          description: "",
+          section: "News",handler: () => {
+              window.location.href = "/news/announcement_2/";
+            },},{id: "news-a-simple-inline-announcement-with-markdown-emoji-sparkles-smile",
+          title: 'A simple inline announcement with Markdown emoji! <img class="emoji" title=":sparkles:" alt=":sparkles:" src="https://github.githubassets.com/images/icons/emoji/unicode/2728.png" height="20" width="20"> <img class="emoji" title=":smile:" alt=":smile:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f604.png" height="20" width="20">',
+          description: "",
+          section: "News",},{id: "projects-placeholder",
+          title: 'placeholder',
+          description: "More projects coming soon.",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/1_project/";
+            },},{id: "teachings-data-science-fundamentals",
+          title: 'Data Science Fundamentals',
+          description: "This course covers the foundational aspects of data science, including data collection, cleaning, analysis, and visualization. Students will learn practical skills for working with real-world datasets.",
+          section: "Teachings",handler: () => {
+              window.location.href = "/teachings/data-science-fundamentals/";
+            },},{id: "teachings-introduction-to-machine-learning",
+          title: 'Introduction to Machine Learning',
+          description: "This course provides an introduction to machine learning concepts, algorithms, and applications. Students will learn about supervised and unsupervised learning, model evaluation, and practical implementations.",
+          section: "Teachings",handler: () => {
+              window.location.href = "/teachings/introduction-to-machine-learning/";
+            },},{
+        id: 'social-cv',
+        title: 'CV',
+        section: 'Socials',
+        handler: () => {
+          window.open("/assets/pdf/example_pdf.pdf", "_blank");
+        },
+      },{
+        id: 'social-email',
+        title: 'email',
+        section: 'Socials',
+        handler: () => {
+          window.open("mailto:%68%61%6F%68%61%69%62%6F.%68%68%62@%61%6C%69%62%61%62%61-%69%6E%63.%63%6F%6D", "_blank");
+        },
+      },{
+        id: 'social-rss',
+        title: 'RSS Feed',
+        section: 'Socials',
+        handler: () => {
+          window.open("/feed.xml", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/assets/al_search/js/shortcut-key.js"></script> </body> </html>
